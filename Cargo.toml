@@ -2,5 +2,16 @@
 name = "deflate_compress"
 version = "0.1.0"
 edition = "2021"
+authors = ["undefined <undefined_1@outlook.com>"]
+description  = "数据结构课程设计 DEFLATE压缩算法"
+repository = "https://github.com/undefined-ux/deflate_compression_rs"
+license-file = "LICENSE"
+keywords = ["compression", "deflate"]
+categories = ["compression", "command-line-utilities"]
 
 [dependencies]
+
+
+[profile.release-lto]
+inherits = "release"
+lto = true
