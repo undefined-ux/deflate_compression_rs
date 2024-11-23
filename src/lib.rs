@@ -1,6 +1,6 @@
 pub mod zip;
 pub mod compress_algorithm;
-
+mod utils;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
