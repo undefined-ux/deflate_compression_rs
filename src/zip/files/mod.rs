@@ -1,21 +1,27 @@
+mod file_descriptor;
 mod local_file_header;
-
+use std::fs::Metadata;
 use std::path::{Path, PathBuf};
 
 use crate::compress_algorithm::Compressable;
+use crate::zip::files::file_descriptor::FileDescriptor;
+use crate::zip::files::local_file_header::LocalFileHeader;
+
 
 pub struct File {
-    pub local_file_header: Vec<u8>,
-    pub file_data: Vec<u8>,
-    pub file_descriptor: Option<Vec<u8>>,
+    local_file_header: LocalFileHeader,
+    file_data: Vec<u8>,
+    file_descriptor: FileDescriptor,
     compression_algorithm: Box<dyn Compressable>,
     file_path: Box<PathBuf>,
-    target_file_path: String
 }
 
-
 impl File {
-    pub fn new(file_path: &str, target_file_path: &str, compress_algo: impl Compressable + 'static) -> Result<Self, String> {
+    pub fn new(
+        file_path: &str,
+        target_file_path: &str,
+        compress_algo: impl Compressable + 'static,
+    ) -> Result<Self, String> {
         let path = Path::new(file_path);
         if !path.exists() {
             return Err("File does not exist".to_string());
@@ -24,40 +30,50 @@ impl File {
             return Err(format!("{} is not a file", file_path));
         }
 
+        let file_metadata: Metadata = match path.metadata() {
+            Ok(metadata) => metadata,
+            Err(e) => {
+                panic!("Error: Failed to get file {} metadata: {}", file_path, e);
+            }
+        };
+
+        let compress_result  = match compress_algo.compress_data(&path) {
+            Ok(res) => res,
+            Err(_) => panic!("Error: Failed to compress file {}", file_path),
+        };
+
         Ok(File {
-            local_file_header: Vec::new(),
-            file_data: Vec::new(),
-            file_descriptor: None,
+            local_file_header: LocalFileHeader::new(
+                &file_metadata,
+                target_file_path,
+                compress_algo.compress_method(),
+            ),
+            file_data: compress_result.data,
+            file_descriptor: FileDescriptor::new(compress_result.crc32, compress_result.compressed_size, file_metadata.len() as u64),
             compression_algorithm: Box::new(compress_algo),
             file_path: Box::new(path.to_path_buf()),
-            target_file_path: target_file_path.to_string()
         })
     }
 
-    fn get_local_file_header(&self) -> Vec<u8> {
-        let local_file_header = Vec::new();
-        local_file_header
+    pub fn get_local_file_header(&self) -> Vec<u8> {
+        self.local_file_header.clone().into()
     }
-
 
     fn get_file_descriptor(&self) -> Vec<u8> {
-        let file_descriptor = Vec::new();
-        file_descriptor
+        self.file_descriptor.clone().into()
     }
 
-    fn get_file_data(&self) -> Result<Vec<u8>, ()> {
-        self.compression_algorithm.compress_data(&self.file_path)
+    fn get_file_data(&self) -> Vec<u8> {
+        self.file_data.clone()
     }
 }
-
-
 
 impl Into<Vec<u8>> for File {
     fn into(self) -> Vec<u8> {
         let mut file = Vec::new();
-        file.extend(self.get_local_file_header());
-        file.extend(self.get_file_data().unwrap());
-        file.extend(self.get_file_descriptor());
+        file.extend::<Vec<u8>>(self.local_file_header.into());
+        file.extend::<Vec<u8>>(self.file_data.into());
+        file.extend::<Vec<u8>>(self.file_descriptor.into());
         file
     }
 }
