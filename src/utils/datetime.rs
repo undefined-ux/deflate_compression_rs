@@ -46,7 +46,6 @@ impl DateTime {
     }
 
     pub fn msdos_time(&self) -> u16 {
-        println!("{:#b} {:#b} {:#b}", self.hour, self.minute, self.second / 2);
         (self.hour as u16) << 11 | (self.minute as u16) << 5 | ((self.second / 2) as u16)
     }
 }
