@@ -1,3 +1,5 @@
+mod local_file_header;
+
 use std::path::{Path, PathBuf};
 
 use crate::compress_algorithm::Compressable;
@@ -33,13 +35,13 @@ impl File {
     }
 
     fn get_local_file_header(&self) -> Vec<u8> {
-        let mut local_file_header = Vec::new();
+        let local_file_header = Vec::new();
         local_file_header
     }
 
 
     fn get_file_descriptor(&self) -> Vec<u8> {
-        let mut file_descriptor = Vec::new();
+        let file_descriptor = Vec::new();
         file_descriptor
     }
 
