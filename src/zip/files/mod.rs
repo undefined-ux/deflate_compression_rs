@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use crate::compress_algorithm::Compressable;
 use crate::zip::files::file_descriptor::FileDescriptor;
 use crate::zip::files::local_file_header::LocalFileHeader;
-
+use crate::utils::Crc32;
 
 pub struct File {
     local_file_header: LocalFileHeader,
@@ -42,6 +42,11 @@ impl File {
             Err(_) => panic!("Error: Failed to compress file {}", file_path),
         };
 
+        let crc32 = match Crc32::calculate_file(path) {
+            Ok(val) => val,
+            Err(_) => panic!("Failed to calculate crc32."),
+        };
+
         Ok(File {
             local_file_header: LocalFileHeader::new(
                 &file_metadata,
@@ -49,7 +54,7 @@ impl File {
                 compress_algo.compress_method(),
             ),
             file_data: compress_result.data,
-            file_descriptor: FileDescriptor::new(compress_result.crc32, compress_result.compressed_size, file_metadata.len() as u64),
+            file_descriptor: FileDescriptor::new(crc32, compress_result.compressed_size, file_metadata.len() as u64),
             compression_algorithm: Box::new(compress_algo),
             file_path: Box::new(path.to_path_buf()),
         })

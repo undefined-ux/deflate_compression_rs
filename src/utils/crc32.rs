@@ -1,3 +1,5 @@
+use std::{fs::File, io::Read, path::Path};
+
 pub struct Crc32 {}
 
 impl Crc32 {
@@ -48,5 +50,14 @@ impl Crc32 {
             crc_value = (crc_value >> 8) ^ Self::CRC32_TABLE[index];
         }
         (((crc_value ^ 0xFFFFFFFF) as u64 | 0x0000000100000000 ) & 0xFFFFFFFF) as u32
+    }
+    pub fn calculate_file(file_path: &Path) -> Result<u32, ()> {
+        let file = File::open(file_path).unwrap();
+        let mut file_data = Vec::new();
+        match file.take(10).read_to_end(&mut file_data) {
+            Err(_) => return Err(()),
+            _ => {}
+        };
+        Ok(Self::calculate(&file_data))
     }
 }

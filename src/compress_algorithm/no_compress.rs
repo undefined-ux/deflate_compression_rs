@@ -14,7 +14,6 @@ impl Compressable for NoCompress {
         Ok(CompressResult {
             data: file_data.clone(),
             compressed_size: file_data.len() as u64,
-            crc32: 0,
         })
     }
     
