@@ -30,3 +30,13 @@ fn generate_crc32_table() {
     };
     println!("{:#X?}", table);
 }
+
+
+// #[test]
+// fn test() {
+//     let mut arr: [u8; 256] = [0; 256];
+//     for i in 0..256 {
+//         arr[i] = i as u8;
+//     }
+//     println!("{:?}", arr[0..8].to_vec());
+// }
